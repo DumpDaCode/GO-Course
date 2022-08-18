@@ -3,11 +3,14 @@ package render
 import (
 	"bytes"
 	"fmt"
-	"go-course/pkg/config"
+
 	"html/template"
 	"log"
 	"net/http"
 	"path/filepath"
+
+	"github.com/go-course/bookings/pkg/config"
+	"github.com/go-course/bookings/pkg/models"
 )
 
 var functions = template.FuncMap{}
@@ -19,8 +22,12 @@ func NewTemplates(a *config.AppConfig) {
 	app = a
 }
 
+func AddDefaultData(td *models.TemplateData) *models.TemplateData {
+	return td
+}
+
 // RenderTemplate renders templates using html/template
-func RenderTemplate(w http.ResponseWriter, tmpl string) {
+func RenderTemplate(w http.ResponseWriter, tmpl string, td *models.TemplateData) {
 	// Get the template cache from the app config
 	var tc map[string]*template.Template
 
@@ -36,7 +43,10 @@ func RenderTemplate(w http.ResponseWriter, tmpl string) {
 	}
 
 	buf := new(bytes.Buffer)
-	_ = t.Execute(buf, nil)
+
+	td = AddDefaultData(td)
+
+	_ = t.Execute(buf, td)
 
 	_, err := buf.WriteTo(w)
 	if err != nil {
