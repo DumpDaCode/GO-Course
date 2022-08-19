@@ -9,20 +9,7 @@
     integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vanillajs-datepicker@1.2.0/dist/css/datepicker.min.css">
   <link rel="stylesheet" type="text/css" href="https://unpkg.com/notie/dist/notie.min.css">
-  <style>
-    .my-footer {
-      height: 5em;
-      background-color: #163b65;
-      margin-top: 1.5em;
-      padding: 1em;
-      color: #ffffff;
-      font-size: 80%;
-    }
-
-    .room-image {
-      max-width: 50%;
-    }
-  </style>
+  <link rel="stylesheet" href="static/styles.css">
 </head>
 
 <body>
@@ -67,7 +54,6 @@
       <div class="col-md-6">
         <h1 class="mt-5">Search for availability</h1>
         <form action="reservation.html" method="get" class="needs-validation" novalidate>
-
           <div class="row" id="reservation-dates">
             <div class="col-6">
               <input name="start" required type="text" class="form-control" placeholder="Arrival">
@@ -102,21 +88,31 @@
   <script src="https://unpkg.com/notie"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.28/dist/sweetalert2.all.min.js"></script>
   <script>
-    // Example starter JavaScript for disabling form submissions if there are invalid fields
+    let attention = Prompt();
     (() => {
       'use strict'
-
-      // Fetch all the forms we want to apply custom Bootstrap validation styles to
       const forms = document.querySelectorAll('.needs-validation')
-
-      // Loop over them and prevent submission
       Array.from(forms).forEach(form => {
         form.addEventListener('submit', event => {
           if (!form.checkValidity()) {
             event.preventDefault()
             event.stopPropagation()
-            modal()
-            notify("Errors", "error")
+            let html = `
+              <form action="" method="get" class="needs-validation" novalidate id="check-availability-form">
+                <div class="row" id="reservation-dates-modal">
+                  <div class="col">
+                    <input disabled id="start" name="start" required type="text" class="form-control" placeholder="Arrival">
+                  </div>
+                  <div class="col">
+                    <input disabled id="end" name="end" required type="text" class="form-control" placeholder="Departure">
+                  </div>
+                </div>
+              </form>
+            `
+            attention.custom({
+              msg: html,
+              title: 'Search Availability'
+            })
           }
           form.classList.add('was-validated')
         }, false)
@@ -143,6 +139,96 @@
         confirmButtonText: 'Cool'
       })
     }
+
+    function Prompt() {
+      let toast = function (c) {
+        const {
+          msg = "",
+          icon = "success",
+          position = "top-end",
+        } = c
+        const Toast = Swal.mixin({
+          toast: true,
+          title: msg,
+          position: position,
+          icon: icon,
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+          }
+        })
+        Toast.fire({})
+      }
+
+      let success = function (c) {
+        const { title = '', footer = '', msg = '' } = c
+        Swal.fire({
+          icon: 'success',
+          title: title,
+          text: msg,
+          footer: footer,
+        })
+      }
+
+      let error = function (c) {
+        const { title = '', footer = '', msg = '' } = c
+        Swal.fire({
+          icon: 'error',
+          title: title,
+          text: msg,
+          footer: footer,
+        })
+      }
+
+      async function custom(c) {
+        const {
+          msg = '',
+          title = '',
+        } = c
+
+        const {
+          values: formValues,
+        } = await Swal.fire({
+          title: title,
+          html: msg,
+          backdrop: false,
+          focusConfirm: false,
+          showCancelButton: true,
+          willOpen: () => {
+            const elem = document.getElementById('reservation-dates-modal');
+            const rangepicker = new DateRangePicker(elem, {
+              format: "yyyy-mm-dd",
+              orientation: 'top',
+            });
+          },
+          didOpen: () => {
+            document.getElementById('start').removeAttribute('disabled')
+            document.getElementById('end').removeAttribute('disabled')
+          },
+          preConfirm: () => {
+            return [
+              document.getElementById('start').value,
+              document.getElementById('end').value
+            ]
+          }
+        })
+
+        if (formValues) {
+          Swal.fire(JSON.stringify(formValues))
+        }
+      }
+
+      return {
+        toast: toast,
+        success: success,
+        error: error,
+        custom: custom,
+      }
+    }
+
   </script>
 </body>
 
