@@ -1,5 +1,7 @@
 package models
 
+import "github.com/go-course/bookings/internal/forms"
+
 // TemplateData holds data send from handlers to template
 type TemplateData struct {
 	StringMap map[string]string
@@ -10,4 +12,5 @@ type TemplateData struct {
 	Flash     string
 	Warning   string
 	Error     string
+	Form      *forms.Form
 }
