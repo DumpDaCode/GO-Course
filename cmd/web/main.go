@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/gob"
 	"fmt"
 
 	"log"
@@ -10,6 +11,7 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-course/bookings/internal/config"
 	"github.com/go-course/bookings/internal/handlers"
+	"github.com/go-course/bookings/internal/models"
 	"github.com/go-course/bookings/internal/render"
 )
 
@@ -22,6 +24,9 @@ var (
 
 // main is the main application function
 func main() {
+
+	//what am I going to store
+	gob.Register(models.Reservation{})
 
 	// Change this to true when in production
 	app.InProduction = false
