@@ -24,7 +24,20 @@ var (
 
 // main is the main application function
 func main() {
+	err := run()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Starting application on Port %s\n", portNumber)
+	srv := &http.Server{
+		Addr:    portNumber,
+		Handler: routes(&app),
+	}
+	err = srv.ListenAndServe()
+	log.Fatal(err)
+}
 
+func run() error {
 	//what am I going to store
 	gob.Register(models.Reservation{})
 
@@ -51,12 +64,5 @@ func main() {
 
 	repo := handlers.NewRepo(&app)
 	handlers.NewHandlers(repo)
-
-	fmt.Printf("Starting application on Port %s\n", portNumber)
-	srv := &http.Server{
-		Addr:    portNumber,
-		Handler: routes(&app),
-	}
-	err = srv.ListenAndServe()
-	log.Fatal(err)
+	return nil
 }
