@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/gob"
 	"fmt"
+	"os"
 
 	"log"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-course/bookings/internal/config"
 	"github.com/go-course/bookings/internal/handlers"
+	"github.com/go-course/bookings/internal/helpers"
 	"github.com/go-course/bookings/internal/models"
 	"github.com/go-course/bookings/internal/render"
 )
@@ -18,8 +20,10 @@ import (
 const portNumber = ":8080"
 
 var (
-	app     config.AppConfig
-	session *scs.SessionManager
+	app      config.AppConfig
+	session  *scs.SessionManager
+	infoLog  *log.Logger
+	errorLog *log.Logger
 )
 
 // main is the main application function
@@ -44,6 +48,12 @@ func run() error {
 	// Change this to true when in production
 	app.InProduction = false
 
+	infoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	app.InfoLog = infoLog
+
+	errorLog = log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	app.ErrorLog = errorLog
+
 	session = scs.New()
 	session.Lifetime = 24 * time.Hour
 	session.Cookie.Persist = true
@@ -60,9 +70,10 @@ func run() error {
 	app.TemplateCache = tc
 	app.UseCache = false
 
-	render.NewTemplates(&app)
-
 	repo := handlers.NewRepo(&app)
 	handlers.NewHandlers(repo)
+	render.NewTemplates(&app)
+	helpers.NewHelpers(&app)
+
 	return nil
 }
