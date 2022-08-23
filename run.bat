@@ -1,0 +1,1 @@
+go build -o go-course.exe cmd/web/. 
