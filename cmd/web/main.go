@@ -11,6 +11,7 @@ import (
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-course/bookings/internal/config"
+	"github.com/go-course/bookings/internal/driver"
 	"github.com/go-course/bookings/internal/handlers"
 	"github.com/go-course/bookings/internal/helpers"
 	"github.com/go-course/bookings/internal/models"
@@ -28,10 +29,12 @@ var (
 
 // main is the main application function
 func main() {
-	err := run()
+	db, err := run()
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.SQL.Close()
+
 	fmt.Printf("Starting application on Port %s\n", portNumber)
 	srv := &http.Server{
 		Addr:    portNumber,
@@ -41,9 +44,13 @@ func main() {
 	log.Fatal(err)
 }
 
-func run() error {
+func run() (*driver.DB, error) {
 	//what am I going to store
+	gob.Register(models.User{})
+	gob.Register(models.Room{})
+	gob.Register(models.Restriction{})
 	gob.Register(models.Reservation{})
+	gob.Register(models.RoomRestriction{})
 
 	// Change this to true when in production
 	app.InProduction = false
@@ -62,18 +69,26 @@ func run() error {
 
 	app.Session = session
 
+	// connect to database
+	log.Println("Connecting to database ...")
+	db, err := driver.ConnectSQL("host=localhost port=5432 dbname=go-course user=postgres password=postgres")
+	if err != nil {
+		log.Fatal("Cannot connect to database! Dying")
+	}
+	log.Println("Connected to database ...")
+
 	tc, err := render.CreateTemplateCache()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	app.TemplateCache = tc
 	app.UseCache = false
 
-	repo := handlers.NewRepo(&app)
+	repo := handlers.NewRepo(&app, db)
 	handlers.NewHandlers(repo)
-	render.NewTemplates(&app)
+	render.NewRender(&app)
 	helpers.NewHelpers(&app)
 
-	return nil
+	return db, nil
 }
