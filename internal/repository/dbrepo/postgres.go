@@ -82,7 +82,7 @@ func (m *postgresDBRepo) SearchAvailabilityByDatesByRoomID(start, end time.Time,
 		and $2 < end_date
 		AND $3 > start_date
 	`
-	err := m.DB.QueryRowContext(ctx, stmt, roomID, start, end).Scan(count)
+	err := m.DB.QueryRowContext(ctx, stmt, roomID, start, end).Scan(&count)
 
 	if err != nil {
 		return false, err

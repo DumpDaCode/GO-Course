@@ -48,10 +48,10 @@
       <form action="" method="post" class="needs-validation" novalidate id="check-availability-form">
         <div class="row" id="reservation-dates-modal">
           <div class="col">
-            <input disabled id="start" name="start" required type="text" class="form-control" placeholder="Arrival">
+            <input disabled autocomplete="off" id="start" name="start" required type="text" class="form-control" placeholder="Arrival">
           </div>
           <div class="col">
-            <input disabled id="end" name="end" required type="text" class="form-control" placeholder="Departure">
+            <input disabled autocomplete="off" id="end" name="end" required type="text" class="form-control" placeholder="Departure">
           </div>
         </div>
       </form>
@@ -64,6 +64,7 @@
         const rangepicker = new DateRangePicker(elem, {
           format: "yyyy-mm-dd",
           orientation: 'top',
+          minDate: new Date()
         });
       },
       didOpen: () => {
@@ -71,16 +72,35 @@
         document.getElementById('end').removeAttribute('disabled')
       },
       callback: function (result) {
+        if (result === undefined || result === false) {
+          return
+        }
         let form = document.getElementById("check-availability-form")
         let formData = new FormData(form)
         formData.append("csrf_token", "{{.CSRFToken}}")
+        formData.append("room_id", "1")
         fetch('/search-availability-json', {
           method: "post",
           body: formData,
         })
           .then(response => response.json())
           .then(data => {
-            console.log(data)
+            if (data.ok){
+              attention.custom({
+                icon: 'success',
+                showConfirmButton: false,
+                msg: `
+                  <p>Room is available</p>
+                  <p>
+                    <a href="/book-room?id=`+data.room_id+'&s='+data.start_date+'&e='+data.end_date+`" class="btn btn-primary">Book Now</a>
+                  </p>
+                `
+              })
+            } else {
+              attention.error({
+                msg: "No availability"
+              })
+            }
           })
       }
     })
