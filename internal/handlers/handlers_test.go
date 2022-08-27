@@ -239,22 +239,22 @@ func TestRepository_PostAvailability(t *testing.T) {
 		{
 			name:    "No body",
 			reqBody: nil,
-			want:    http.StatusTemporaryRedirect,
+			want:    http.StatusSeeOther,
 		},
 		{
 			name:    "No Start Date",
 			reqBody: strings.NewReader("end=2050-01-02"),
-			want:    http.StatusTemporaryRedirect,
+			want:    http.StatusSeeOther,
 		},
 		{
 			name:    "No End Date",
 			reqBody: strings.NewReader("start=2050-01-01"),
-			want:    http.StatusTemporaryRedirect,
+			want:    http.StatusSeeOther,
 		},
 		{
 			name:    "Rooms not available",
 			reqBody: strings.NewReader("start=2022-08-27&end=2050-01-02"),
-			want:    http.StatusTemporaryRedirect,
+			want:    http.StatusSeeOther,
 		},
 	}
 	for _, testCase := range testCases {

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -68,6 +69,7 @@ func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 
 	room, err := m.DB.GetRoomByID(res.RoomID)
 	if err != nil {
+		m.App.ErrorLog.Println(err)
 		m.App.Session.Put(r.Context(), "error", "Can't find room")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 	}
@@ -93,6 +95,7 @@ func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
+		m.App.ErrorLog.Println(err)
 		m.App.Session.Put(r.Context(), "error", "can't parse form")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
@@ -102,12 +105,14 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	ed := r.Form.Get("end_date")
 	startDate, err := time.Parse("2006-01-02", sd)
 	if err != nil {
+		m.App.ErrorLog.Println(err)
 		m.App.Session.Put(r.Context(), "error", "can't parse start date")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 	endDate, err := time.Parse("2006-01-02", ed)
 	if err != nil {
+		m.App.ErrorLog.Println(err)
 		m.App.Session.Put(r.Context(), "error", "can't parse end date")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
@@ -115,6 +120,7 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 
 	roomID, err := strconv.Atoi(r.Form.Get("room_id"))
 	if err != nil {
+		m.App.ErrorLog.Println(err)
 		m.App.Session.Put(r.Context(), "error", "can't parse room id")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
@@ -138,7 +144,6 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	if !form.Valid() {
 		data := make(map[string]interface{})
 		data["reservation"] = reservation
-		http.Error(w, "Some error", http.StatusSeeOther)
 		render.Template(w, r, "make-reservation.page.tmpl", &models.TemplateData{
 			Form: form,
 			Data: data,
@@ -148,6 +153,7 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 
 	newReservationID, err := m.DB.InsertReservation(reservation)
 	if err != nil {
+		m.App.ErrorLog.Println(err)
 		m.App.Session.Put(r.Context(), "error", "can't insert reservation into database")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
@@ -163,11 +169,30 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 
 	err = m.DB.InsertRoomRestriction(restriction)
 	if err != nil {
+		m.App.ErrorLog.Println(err)
 		m.App.Session.Put(r.Context(), "error", "can't insert room restriction")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 
+	// send notifications - first to guest
+	htmlMessage := fmt.Sprintf(`
+		<strong>Reservation Confirmation</strong><br/>
+		Dear %s, <br/>
+		This is to confirm your reservation from %s to %s
+	`,
+		reservation.FirstName,
+		reservation.StartDate.Format("2006-01-02"),
+		reservation.EndDate.Format("2006-01-02"),
+	)
+	msg := models.MailData{
+		To:      reservation.Email,
+		From:    "rajiv@mkcl.org",
+		Subject: "Reservation Confirmation",
+		Content: htmlMessage,
+	}
+
+	m.App.MailChan <- msg
 	m.App.Session.Put(r.Context(), "reservation", reservation)
 	http.Redirect(w, r, "/reservation-summary", http.StatusSeeOther)
 }
@@ -191,8 +216,9 @@ func (m *Repository) Availability(w http.ResponseWriter, r *http.Request) {
 func (m *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
+		m.App.ErrorLog.Println(err)
 		m.App.Session.Put(r.Context(), "error", "can't parse form")
-		http.Redirect(w, r, "/search-availability", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/search-availability", http.StatusSeeOther)
 		return
 	}
 	sd := r.Form.Get("start")
@@ -201,27 +227,30 @@ func (m *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) {
 	layout := "2006-01-02"
 	startDate, err := time.Parse(layout, sd)
 	if err != nil {
+		m.App.ErrorLog.Println(err)
 		m.App.Session.Put(r.Context(), "error", "Unable to parse start date")
-		http.Redirect(w, r, "/search-availability", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/search-availability", http.StatusSeeOther)
 		return
 	}
 	endDate, err := time.Parse(layout, ed)
 	if err != nil {
+		m.App.ErrorLog.Println(err)
 		m.App.Session.Put(r.Context(), "error", "Unable to parse end date")
-		http.Redirect(w, r, "/search-availability", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/search-availability", http.StatusSeeOther)
 		return
 	}
 
 	rooms, err := m.DB.SearchAvailabilityForAllRooms(startDate, endDate)
 	if err != nil {
+		m.App.ErrorLog.Println(err)
 		m.App.Session.Put(r.Context(), "error", "Unable to connect to DB")
-		http.Redirect(w, r, "/search-availability", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/search-availability", http.StatusSeeOther)
 		return
 	}
 
 	if len(rooms) == 0 {
 		m.App.Session.Put(r.Context(), "error", "No availability")
-		http.Redirect(w, r, "/search-availability", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/search-availability", http.StatusSeeOther)
 		return
 	}
 
