@@ -548,7 +548,7 @@ func (m *Repository) AdminShowReservation(w http.ResponseWriter, r *http.Request
 	stringMap := make(map[string]string)
 	stringMap["src"] = src
 
-	res, err := m.DB.GetReservatioById(id)
+	res, err := m.DB.GetReservationById(id)
 	if err != nil {
 		m.App.ErrorLog.Println(err)
 	}
@@ -561,4 +561,42 @@ func (m *Repository) AdminShowReservation(w http.ResponseWriter, r *http.Request
 		Data:      data,
 		Form:      forms.New(nil),
 	})
+}
+
+// AdminPostShowReservation updates reservation in database
+func (m *Repository) AdminPostShowReservation(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		m.App.ErrorLog.Println(err)
+		return
+	}
+	exploded := strings.Split(r.RequestURI, "/")
+	id, err := strconv.Atoi(exploded[4])
+	if err != nil {
+		m.App.ErrorLog.Println(err)
+		return
+	}
+	src := exploded[3]
+	stringMap := make(map[string]string)
+	stringMap["src"] = src
+
+	res, err := m.DB.GetReservationById(id)
+	if err != nil {
+		m.App.ErrorLog.Println(err)
+		return
+	}
+
+	res.FirstName = r.Form.Get("first_name")
+	res.LastName = r.Form.Get("last_name")
+	res.Email = r.Form.Get("email")
+	res.Phone = r.Form.Get("phone")
+
+	err = m.DB.UpdateReservation(res)
+	if err != nil {
+		m.App.ErrorLog.Println(err)
+		return
+	}
+
+	m.App.Session.Put(r.Context(), "flash", "Changes Saved")
+	http.Redirect(w, r, "/admin/reservations-"+src, http.StatusSeeOther)
 }

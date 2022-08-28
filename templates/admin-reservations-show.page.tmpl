@@ -13,7 +13,7 @@
         <strong>Departure:</strong>{{ humanDate $res.EndDate }}<br />
         <strong>Room:</strong>{{ $res.Room.RoomName }}<br />
       </p>
-      <form method="post" action="/admin/reservation/{{$src}}/{{$res.ID}}" class="" novalidate>
+      <form method="post" action="/admin/reservations/{{$src}}/{{$res.ID}}" class="" novalidate>
         <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
         <div class="form-group mt-3">
           <label for="first_name">First Name:</label>

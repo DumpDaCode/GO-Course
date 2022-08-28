@@ -361,7 +361,7 @@ func (m *postgresDBRepo) AllNewReservations() ([]models.Reservation, error) {
 }
 
 // GetReservatioById returns a reservation based on id
-func (m *postgresDBRepo) GetReservatioById(id int) (models.Reservation, error) {
+func (m *postgresDBRepo) GetReservationById(id int) (models.Reservation, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	var reservation models.Reservation
@@ -413,6 +413,7 @@ func (m *postgresDBRepo) UpdateReservation(u models.Reservation) error {
 	email = $3, 
 	phone = $4,
 	updated_at = $5
+	where id = $6
 	`
 
 	_, err := m.DB.ExecContext(ctx, query,
@@ -421,6 +422,7 @@ func (m *postgresDBRepo) UpdateReservation(u models.Reservation) error {
 		u.Email,
 		u.Phone,
 		time.Now(),
+		u.ID,
 	)
 
 	if err != nil {
