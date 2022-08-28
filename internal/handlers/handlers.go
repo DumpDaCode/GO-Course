@@ -95,7 +95,6 @@ func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		m.App.ErrorLog.Println(err)
 		m.App.Session.Put(r.Context(), "error", "can't parse form")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
@@ -105,14 +104,12 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	ed := r.Form.Get("end_date")
 	startDate, err := time.Parse("2006-01-02", sd)
 	if err != nil {
-		m.App.ErrorLog.Println(err)
 		m.App.Session.Put(r.Context(), "error", "can't parse start date")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 	endDate, err := time.Parse("2006-01-02", ed)
 	if err != nil {
-		m.App.ErrorLog.Println(err)
 		m.App.Session.Put(r.Context(), "error", "can't parse end date")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
@@ -120,7 +117,6 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 
 	roomID, err := strconv.Atoi(r.Form.Get("room_id"))
 	if err != nil {
-		m.App.ErrorLog.Println(err)
 		m.App.Session.Put(r.Context(), "error", "can't parse room id")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
@@ -153,7 +149,6 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 
 	newReservationID, err := m.DB.InsertReservation(reservation)
 	if err != nil {
-		m.App.ErrorLog.Println(err)
 		m.App.Session.Put(r.Context(), "error", "can't insert reservation into database")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
@@ -169,7 +164,6 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 
 	err = m.DB.InsertRoomRestriction(restriction)
 	if err != nil {
-		m.App.ErrorLog.Println(err)
 		m.App.Session.Put(r.Context(), "error", "can't insert room restriction")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
@@ -177,7 +171,6 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 
 	room, err := m.DB.GetRoomByID(reservation.RoomID)
 	if err != nil {
-		m.App.ErrorLog.Println(err)
 		m.App.Session.Put(r.Context(), "error", "Can't find room")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 	}

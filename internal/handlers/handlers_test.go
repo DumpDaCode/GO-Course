@@ -130,7 +130,7 @@ func TestRepository_PostReservation(t *testing.T) {
 		{
 			name:    "Form validation failed",
 			reqBody: strings.NewReader("start_date=2050-01-01&end_date=2050-01-02&first_name=J&last_name=Smith&email=rajiv@mkcl.org&phone=123456789&room_id=1"),
-			want:    http.StatusSeeOther,
+			want:    http.StatusOK,
 		},
 		{
 			name:    "Unable to add reservation",
