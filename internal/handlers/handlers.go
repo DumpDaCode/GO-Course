@@ -193,6 +193,14 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	m.App.MailChan <- msg
+	room, err := m.DB.GetRoomByID(reservation.RoomID)
+	if err != nil {
+		m.App.ErrorLog.Println(err)
+		m.App.Session.Put(r.Context(), "error", "Can't find room")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+	}
+
+	reservation.Room.RoomName = room.RoomName
 	m.App.Session.Put(r.Context(), "reservation", reservation)
 	http.Redirect(w, r, "/reservation-summary", http.StatusSeeOther)
 }
