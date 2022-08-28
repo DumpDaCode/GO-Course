@@ -72,12 +72,6 @@ function Prompt() {
           c.didOpen()
         }
       },
-      preConfirm: () => {
-        return [
-          document.getElementById('start').value,
-          document.getElementById('end').value
-        ]
-      }
     }).then(result => {
       if (result){
         if(result.isDismissed || result.dismiss !== Swal.DismissReason.cancel){

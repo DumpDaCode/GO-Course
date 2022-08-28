@@ -18,13 +18,16 @@
   <link rel="stylesheet" href="/static/admin/css/style.css">
   <!-- endinject -->
   <link rel="shortcut icon" href="/static/admin/images/favicon.png" />
-
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/notie/dist/notie.min.css">
   <style>
     .content-wrapper {
       background: white;
     }
     label {
       font-weight: bold;
+    }
+    .notie-container, .notie-textbox{
+      z-index: 1000000;
     }
   </style>
   {{ block "css" .}}
@@ -138,6 +141,42 @@
   <!-- Custom js for this page-->
   <script src="/static/admin/js/dashboard.js"></script>
   <!-- End custom js for this page-->
+
+  <script src="https://unpkg.com/notie"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.28/dist/sweetalert2.all.min.js"></script>
+  <script src="/static/js/app.js"></script>
+
+  <script>
+    let attention = Prompt();
+
+    function notify(msg, msgType) {
+      notie.alert({
+        type: msgType,
+        text: msg,
+      })
+    }
+
+    function modal() {
+      Swal.fire({
+        title: 'Error!',
+        text: 'Do you want to continue',
+        icon: 'error',
+        confirmButtonText: 'Cool'
+      })
+    }
+
+    {{ with .Error }}
+    notify("{{.}}", "error")
+    {{ end }}
+
+    {{ with .Flash }}
+    notify("{{.}}", "success")
+    {{ end }}
+
+    {{ with .Warning }}
+    notify("{{.}}", "warning")
+    {{ end }}
+  </script>
 
   {{ block "js" .}}
 

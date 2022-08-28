@@ -503,7 +503,7 @@ func (m *Repository) AdminDashboard(w http.ResponseWriter, r *http.Request) {
 
 // AdminNewReservations renders all the new reservations
 func (m *Repository) AdminNewReservations(w http.ResponseWriter, r *http.Request) {
-	reservation, err := m.DB.AllReservations()
+	reservation, err := m.DB.AllNewReservations()
 	if err != nil {
 		m.App.ErrorLog.Println(err)
 		return
@@ -598,5 +598,25 @@ func (m *Repository) AdminPostShowReservation(w http.ResponseWriter, r *http.Req
 	}
 
 	m.App.Session.Put(r.Context(), "flash", "Changes Saved")
+	http.Redirect(w, r, "/admin/reservations-"+src, http.StatusSeeOther)
+}
+
+// AdminProcessReservation displays process reservation
+func (m *Repository) AdminProcessReservation(w http.ResponseWriter, r *http.Request) {
+	exploded := strings.Split(r.RequestURI, "/")
+	id, err := strconv.Atoi(exploded[4])
+	if err != nil {
+		m.App.ErrorLog.Println(err)
+		return
+	}
+	src := exploded[3]
+
+	err = m.DB.UpdateProcessedForReservation(id, 1)
+	if err != nil {
+		m.App.ErrorLog.Println(err)
+		return
+	}
+
+	m.App.Session.Put(r.Context(), "flash", "Reservation marked as processed")
 	http.Redirect(w, r, "/admin/reservations-"+src, http.StatusSeeOther)
 }
