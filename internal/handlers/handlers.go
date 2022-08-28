@@ -175,25 +175,6 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// send notifications - first to guest
-	htmlMessage := fmt.Sprintf(`
-		<strong>Reservation Confirmation</strong><br/>
-		Dear %s, <br/>
-		This is to confirm your reservation from %s to %s
-	`,
-		reservation.FirstName,
-		reservation.StartDate.Format("2006-01-02"),
-		reservation.EndDate.Format("2006-01-02"),
-	)
-	msg := models.MailData{
-		To:      reservation.Email,
-		From:    "rajiv@mkcl.org",
-		Subject: "Reservation Confirmation",
-		Content: htmlMessage,
-	}
-
-	m.App.MailChan <- msg
-
 	room, err := m.DB.GetRoomByID(reservation.RoomID)
 	if err != nil {
 		m.App.ErrorLog.Println(err)
@@ -203,20 +184,42 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 
 	reservation.Room.RoomName = room.RoomName
 
+	// send notifications - first to guest
+	htmlMessage := fmt.Sprintf(`
+		<h2>Reservation Confirmation</h2><br/>
+		Dear %s, <br/>
+		This is to confirm your reservation from %s to %s for room: <strong>%s</strong>
+	`,
+		reservation.FirstName,
+		reservation.StartDate.Format("2006-01-02"),
+		reservation.EndDate.Format("2006-01-02"),
+		reservation.Room.RoomName,
+	)
+	msg := models.MailData{
+		To:       reservation.Email,
+		From:     "rajiv@mkcl.org",
+		Subject:  "Reservation Confirmation",
+		Content:  htmlMessage,
+		Template: "basic.html",
+	}
+
+	m.App.MailChan <- msg
+
 	// Send to property owner
 	htmlMessage = fmt.Sprintf(`
-		<strong>Reservation Notification</strong><br/>
-		This is to notify you that reservation for room %s has been made from %s to %s
+		<h2>Reservation Notification</h2><br/>
+		This is to notify you that reservation for room <strong>%s</strong> has been made from %s to %s
 	`,
 		reservation.Room.RoomName,
 		reservation.StartDate.Format("2006-01-02"),
 		reservation.EndDate.Format("2006-01-02"),
 	)
 	msg = models.MailData{
-		To:      "rajiv@mkcl.org",
-		From:    "rajiv@mkcl.org",
-		Subject: "Reservation Confirmation",
-		Content: htmlMessage,
+		To:       "rajiv@mkcl.org",
+		From:     "rajiv@mkcl.org",
+		Subject:  "Reservation Notification",
+		Content:  htmlMessage,
+		Template: "basic.html",
 	}
 
 	m.App.MailChan <- msg
@@ -368,7 +371,6 @@ func (m *Repository) ReservationSummary(w http.ResponseWriter, r *http.Request) 
 
 	data := make(map[string]interface{})
 	data["reservation"] = reservation
-	fmt.Println(reservation.Room)
 
 	m.App.Session.Put(r.Context(), "reservation", reservation)
 	sd := reservation.StartDate.Format("2006-01-02")
