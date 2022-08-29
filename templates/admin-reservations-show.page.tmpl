@@ -59,7 +59,9 @@
           {{ else }}
           <a href="/admin/reservations-{{$src}}" class="btn btn-warning">Cancel</a>
           {{ end }}
+          {{ if ne $res.Procesed 1 }}
           <a href="#" class="btn btn-info" onClick="processRes({{$res.ID}})">Mark as Processed</a>
+          {{ end }}
         </div>
         <div class="float-end">
           <a href="#" class="btn btn-danger" onClick="deleteRes({{$res.ID}})">Delete</a>
