@@ -37,6 +37,7 @@ func TestGetHandlers(t *testing.T) {
 		{"All reservations", "/admin/reservations-all", "GET", http.StatusOK},
 		{"New reservations", "/admin/reservations-new", "GET", http.StatusOK},
 		{"Show reservations", "/admin/reservations/new/1/show", "GET", http.StatusOK},
+		{"Reservation Calendar", "/admin/reservations-calendar?y=2050&m=05", "GET", http.StatusOK},
 	}
 
 	for _, e := range theTests {
@@ -454,22 +455,22 @@ func TestRepository_PostShowLogin(t *testing.T) {
 		{
 			name:     "valid credentials",
 			email:    "rajiv@mkcl.org",
-			want:     http.StatusOK,
+			want:     http.StatusSeeOther,
 			html:     "",
 			location: "",
 		},
 		{
-			name:     "invalid credentials",
+			name:     "Invalid credentials",
 			email:    "jack@mkcl.org",
 			want:     http.StatusSeeOther,
 			html:     "",
 			location: "/user/login",
 		},
 		{
-			name:     "invalid data",
+			name:     "Invalid email",
 			email:    "jack",
 			want:     http.StatusOK,
-			html:     `action="/user/login"`,
+			html:     "action=\"/user/login\"",
 			location: "",
 		},
 	}
@@ -479,28 +480,67 @@ func TestRepository_PostShowLogin(t *testing.T) {
 		postedData.Add("email", testCase.email)
 		postedData.Add("password", "rajiv")
 		req, _ := http.NewRequest("POST", "/user/login", strings.NewReader(postedData.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		ctx := getCtx(req)
 		req = req.WithContext(ctx)
-		req.Header.Set("Content-Type", "x-www-form-urlencoded")
 		rr := httptest.NewRecorder()
 		handler := http.HandlerFunc(Repo.PostShowLogin)
 		handler.ServeHTTP(rr, req)
 		if rr.Code != testCase.want {
 			t.Errorf("ShowLogin handler returned wrong response code for (%s): got %d, wanted %d", testCase.name, rr.Code, testCase.want)
-		}
-
-		if testCase.location != "" {
+		} else if testCase.location != "" {
 			actualLoc, _ := rr.Result().Location()
 			if actualLoc.String() != testCase.location {
 				t.Errorf("Redirected on wrong path for(%s): got %s, wanted %s", testCase.name, actualLoc.String(), testCase.location)
 			}
-		}
-
-		if testCase.html != "" {
+		} else if testCase.html != "" {
 			html := rr.Body.String()
-			if strings.Contains(html, testCase.html) {
+			if !strings.Contains(html, testCase.html) {
+				t.Log(strings.Contains(html, testCase.html))
 				t.Errorf("Wrong HTML rendered for(%s): expected to find %s", testCase.name, testCase.html)
 			}
+		}
+	}
+}
+
+func TestRepository_AdminPostReservationsCalendar(t *testing.T) {
+	var testCases = []struct {
+		name        string
+		postData    url.Values
+		sessionData map[string]int
+		want        int
+	}{
+		{
+			name: "valid case",
+			postData: url.Values{
+				"y": []string{
+					"2050",
+				},
+				"m": []string{
+					"01",
+				},
+			},
+			sessionData: map[string]int{},
+			want:        http.StatusSeeOther,
+		},
+	}
+
+	for _, testCase := range testCases {
+		postedData := url.Values{}
+		postedData.Add("y", "2050")
+		postedData.Add("m", "02")
+		req, _ := http.NewRequest("POST", "/admin/reservations-calendar", strings.NewReader(testCase.postData.Encode()))
+		ctx := getCtx(req)
+		req = req.WithContext(ctx)
+
+		rr := httptest.NewRecorder()
+		handler := http.HandlerFunc(Repo.AdminPostReservationsCalendar)
+		session.Put(req.Context(), "block_map_1", testCase.sessionData)
+		session.Put(req.Context(), "block_map_2", testCase.sessionData)
+		handler.ServeHTTP(rr, req)
+
+		if rr.Code != testCase.want {
+			t.Errorf("AdminReservationsCalendar handler errored for (%s): got %d, want %d", testCase.name, rr.Code, testCase.want)
 		}
 	}
 }

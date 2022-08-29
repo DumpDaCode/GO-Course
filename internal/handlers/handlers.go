@@ -538,14 +538,8 @@ func (m *Repository) AdminReservationsCalendar(w http.ResponseWriter, r *http.Re
 	now := time.Now()
 
 	if r.URL.Query().Get("y") != "" && r.URL.Query().Get("m") != "" {
-		year, err := strconv.Atoi(r.URL.Query().Get("y"))
-		if err != nil {
-			m.App.ErrorLog.Println(err)
-		}
-		month, err := strconv.Atoi(r.URL.Query().Get("m"))
-		if err != nil {
-			m.App.ErrorLog.Println(err)
-		}
+		year, _ := strconv.Atoi(r.URL.Query().Get("y"))
+		month, _ := strconv.Atoi(r.URL.Query().Get("m"))
 		now = time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
 	}
 
@@ -642,7 +636,6 @@ func (m *Repository) AdminPostReservationsCalendar(w http.ResponseWriter, r *htt
 
 	for _, x := range rooms {
 		curMap, ok := m.App.Session.Get(r.Context(), fmt.Sprintf("block_map_%d", x.ID)).(map[string]int)
-
 		if !ok {
 			helpers.ServerError(w, errors.New("nothing in session"))
 			return

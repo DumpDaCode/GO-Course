@@ -116,12 +116,46 @@ func (m *testDBRepo) UpdateProcessedForReservation(id, processed int) error {
 }
 
 func (m *testDBRepo) AllRooms() ([]models.Room, error) {
-	var rooms []models.Room
+	var rooms = []models.Room{
+		{
+			ID:        1,
+			RoomName:  "Generals Quarters",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		},
+		{
+			ID:        2,
+			RoomName:  "Majors Suite",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		},
+	}
 	return rooms, nil
 }
 
 func (m *testDBRepo) GetRestrictionsForRoomByDate(roomID int, start, end time.Time) ([]models.RoomRestriction, error) {
-	var restrictions []models.RoomRestriction
+	var restrictions = []models.RoomRestriction{
+		{
+			ID:            roomID,
+			StartDate:     start,
+			EndDate:       end,
+			RoomID:        1,
+			ReservationID: 1,
+			RestrictionID: 1,
+			CreatedAt:     time.Now(),
+			UpdatedAt:     time.Now(),
+		},
+		{
+			ID:            roomID,
+			StartDate:     start.AddDate(0, 1, 1),
+			EndDate:       end.AddDate(0, 1, 1),
+			RoomID:        1,
+			ReservationID: 0,
+			RestrictionID: 2,
+			CreatedAt:     time.Now(),
+			UpdatedAt:     time.Now(),
+		},
+	}
 
 	return restrictions, nil
 }
