@@ -452,7 +452,7 @@ func (m *postgresDBRepo) DeleteReservation(id int) error {
 	return nil
 }
 
-// UpdateProcessed updates processed flag in database
+// UpdateProcessedForReservation updates processed flag in database
 func (m *postgresDBRepo) UpdateProcessedForReservation(id, processed int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -508,4 +508,46 @@ func (m *postgresDBRepo) AllRooms() ([]models.Room, error) {
 	}
 
 	return rooms, nil
+}
+
+// GetRestrictionsForRoomByDate gets restrcition from room_restrictions table for start, end date
+func (m *postgresDBRepo) GetRestrictionsForRoomByDate(roomID int, start, end time.Time) ([]models.RoomRestriction, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var restrictions []models.RoomRestriction
+
+	query := `
+	select id, coalesce(reservation_id, 0), restriction_id, room_id, start_date, end_date
+	from room_restrictions 
+	where room_id = $1 and $2 < end_date and $3 >= start_date
+	`
+
+	rows, err := m.DB.QueryContext(ctx, query, roomID, start, end)
+
+	if err != nil {
+		return restrictions, err
+	}
+
+	for rows.Next() {
+		var r models.RoomRestriction
+		err := rows.Scan(
+			&r.ID,
+			&r.ReservationID,
+			&r.RestrictionID,
+			&r.RoomID,
+			&r.StartDate,
+			&r.EndDate,
+		)
+		if err != nil {
+			return restrictions, err
+		}
+		restrictions = append(restrictions, r)
+	}
+
+	if rows.Err() != nil {
+		return restrictions, rows.Err()
+	}
+
+	return restrictions, nil
 }
