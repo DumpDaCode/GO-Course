@@ -690,6 +690,12 @@ func (m *Repository) AdminShowReservation(w http.ResponseWriter, r *http.Request
 	stringMap := make(map[string]string)
 	stringMap["src"] = src
 
+	year := r.URL.Query().Get("y")
+	month := r.URL.Query().Get("m")
+
+	stringMap["year"] = year
+	stringMap["month"] = month
+
 	res, err := m.DB.GetReservationById(id)
 	if err != nil {
 		m.App.ErrorLog.Println(err)
@@ -739,8 +745,17 @@ func (m *Repository) AdminPostShowReservation(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	month := r.Form.Get("month")
+	year := r.Form.Get("year")
+
 	m.App.Session.Put(r.Context(), "flash", "Changes Saved")
-	http.Redirect(w, r, "/admin/reservations-"+src, http.StatusSeeOther)
+
+	if year == "" {
+		http.Redirect(w, r, "/admin/reservations-"+src, http.StatusSeeOther)
+	} else {
+		http.Redirect(w, r, "/admin/reservations-calendar?y="+year+"&m="+month, http.StatusSeeOther)
+	}
+
 }
 
 // AdminProcessReservation displays process reservation
@@ -759,8 +774,15 @@ func (m *Repository) AdminProcessReservation(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	year := r.URL.Query().Get("y")
+	month := r.URL.Query().Get("m")
+
 	m.App.Session.Put(r.Context(), "flash", "Reservation marked as processed")
-	http.Redirect(w, r, "/admin/reservations-"+src, http.StatusSeeOther)
+	if year == "" {
+		http.Redirect(w, r, "/admin/reservations-"+src, http.StatusSeeOther)
+	} else {
+		http.Redirect(w, r, "/admin/reservations-calendar?y="+year+"&m="+month, http.StatusSeeOther)
+	}
 }
 
 // AdminDeleteReservation displays process reservation
@@ -779,6 +801,13 @@ func (m *Repository) AdminDeleteReservation(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	m.App.Session.Put(r.Context(), "flash", "Reservation deleted")
-	http.Redirect(w, r, "/admin/reservations-"+src, http.StatusSeeOther)
+	year := r.URL.Query().Get("y")
+	month := r.URL.Query().Get("m")
+
+	m.App.Session.Put(r.Context(), "flash", "Reservation marked as processed")
+	if year == "" {
+		http.Redirect(w, r, "/admin/reservations-"+src, http.StatusSeeOther)
+	} else {
+		http.Redirect(w, r, "/admin/reservations-calendar?y="+year+"&m="+month, http.StatusSeeOther)
+	}
 }
