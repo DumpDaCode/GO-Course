@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -30,6 +31,12 @@ func TestGetHandlers(t *testing.T) {
 		{"Major's Suite", "/majors-suite", "GET", http.StatusOK},
 		{"Search Availability", "/search-availability", "GET", http.StatusOK},
 		{"Contact", "/contact", "GET", http.StatusOK},
+		{"Route does not exist", "/hello/world", "GET", http.StatusNotFound},
+		{"Show login Page", "/user/login", "GET", http.StatusOK},
+		{"Dashboard page", "/admin/dashboard", "GET", http.StatusOK},
+		{"All reservations", "/admin/reservations-all", "GET", http.StatusOK},
+		{"New reservations", "/admin/reservations-new", "GET", http.StatusOK},
+		{"Show reservations", "/admin/reservations/new/1/show", "GET", http.StatusOK},
 	}
 
 	for _, e := range theTests {
@@ -407,6 +414,93 @@ func TestRepository_BookRoom(t *testing.T) {
 
 		if rr.Code != testCase.want {
 			t.Errorf("BookRoom handler returned wrong response code for (%s): got %d, wanted %d", testCase.name, rr.Code, testCase.want)
+		}
+	}
+}
+
+// Doing this because we need session
+func TestRepository_Logout(t *testing.T) {
+	var testCases = []struct {
+		name string
+		want int
+	}{
+		{
+			name: "Valid Case",
+			want: http.StatusSeeOther,
+		},
+	}
+
+	for _, testCase := range testCases {
+		req, _ := http.NewRequest("GET", "/user/logout", nil)
+		ctx := getCtx(req)
+		req = req.WithContext(ctx)
+		rr := httptest.NewRecorder()
+		handler := http.HandlerFunc(Repo.Logout)
+		handler.ServeHTTP(rr, req)
+		if rr.Code != testCase.want {
+			t.Errorf("Logout handler returned wrong response code for (%s): got %d, wanted %d", testCase.name, rr.Code, testCase.want)
+		}
+	}
+}
+
+func TestRepository_PostShowLogin(t *testing.T) {
+	var testCases = []struct {
+		name     string
+		email    string
+		want     int
+		html     string
+		location string
+	}{
+		{
+			name:     "valid credentials",
+			email:    "rajiv@mkcl.org",
+			want:     http.StatusOK,
+			html:     "",
+			location: "",
+		},
+		{
+			name:     "invalid credentials",
+			email:    "jack@mkcl.org",
+			want:     http.StatusSeeOther,
+			html:     "",
+			location: "/user/login",
+		},
+		{
+			name:     "invalid data",
+			email:    "jack",
+			want:     http.StatusOK,
+			html:     `action="/user/login"`,
+			location: "",
+		},
+	}
+
+	for _, testCase := range testCases {
+		postedData := url.Values{}
+		postedData.Add("email", testCase.email)
+		postedData.Add("password", "rajiv")
+		req, _ := http.NewRequest("POST", "/user/login", strings.NewReader(postedData.Encode()))
+		ctx := getCtx(req)
+		req = req.WithContext(ctx)
+		req.Header.Set("Content-Type", "x-www-form-urlencoded")
+		rr := httptest.NewRecorder()
+		handler := http.HandlerFunc(Repo.PostShowLogin)
+		handler.ServeHTTP(rr, req)
+		if rr.Code != testCase.want {
+			t.Errorf("ShowLogin handler returned wrong response code for (%s): got %d, wanted %d", testCase.name, rr.Code, testCase.want)
+		}
+
+		if testCase.location != "" {
+			actualLoc, _ := rr.Result().Location()
+			if actualLoc.String() != testCase.location {
+				t.Errorf("Redirected on wrong path for(%s): got %s, wanted %s", testCase.name, actualLoc.String(), testCase.location)
+			}
+		}
+
+		if testCase.html != "" {
+			html := rr.Body.String()
+			if strings.Contains(html, testCase.html) {
+				t.Errorf("Wrong HTML rendered for(%s): expected to find %s", testCase.name, testCase.html)
+			}
 		}
 	}
 }

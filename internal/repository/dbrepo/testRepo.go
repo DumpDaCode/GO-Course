@@ -78,6 +78,9 @@ func (m *testDBRepo) Authenticate(email, testPassword string) (int, string, erro
 	var id int
 	var hashedPassword string
 
+	if email != "rajiv@mkcl.org" {
+		return id, hashedPassword, errors.New("some error")
+	}
 	return id, hashedPassword, nil
 }
 

@@ -23,6 +23,5 @@ func TestSessionLoad(t *testing.T) {
 	case http.Handler:
 	default:
 		t.Error("Type is not http.Handler")
-
 	}
 }
