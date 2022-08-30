@@ -662,7 +662,7 @@ func (m *Repository) AdminPostReservationsCalendar(w http.ResponseWriter, r *htt
 			t, _ := time.Parse("2006-01-02", exploded[3])
 			err := m.DB.InsertBlockForRoom(roomID, t)
 			if err != nil {
-				m.App.ErrorLog.Println(err)
+				helpers.ServerError(w, err)
 			}
 		}
 	}
@@ -676,7 +676,7 @@ func (m *Repository) AdminShowReservation(w http.ResponseWriter, r *http.Request
 	exploded := strings.Split(r.RequestURI, "/")
 	id, err := strconv.Atoi(exploded[4])
 	if err != nil {
-		m.App.ErrorLog.Println(err)
+		helpers.ServerError(w, err)
 		return
 	}
 	src := exploded[3]
@@ -691,7 +691,7 @@ func (m *Repository) AdminShowReservation(w http.ResponseWriter, r *http.Request
 
 	res, err := m.DB.GetReservationById(id)
 	if err != nil {
-		m.App.ErrorLog.Println(err)
+		helpers.ServerError(w, err)
 	}
 
 	data := make(map[string]interface{})
