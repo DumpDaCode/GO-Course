@@ -584,3 +584,112 @@ func TestRepository_AdminPostReservationsCalendar(t *testing.T) {
 		}
 	}
 }
+
+func TestRepository_AdminPostShowReservation(t *testing.T) {
+	var testCases = []struct {
+		name     string
+		url      string
+		postData url.Values
+		want     int
+	}{
+		{
+			name: "Valid case for all",
+			url:  "/admin/reservations/all/1",
+			postData: url.Values{
+				"first_name": {"rajiv"},
+				"last_name":  {"singh"},
+				"email":      {"rajiv@gmail.org"},
+				"phone":      {"8989898998"},
+			},
+			want: http.StatusSeeOther,
+		},
+		{
+			name: "Valid case for new",
+			url:  "/admin/reservations/new/1",
+			postData: url.Values{
+				"first_name": {"rajiv"},
+				"last_name":  {"singh"},
+				"email":      {"rajiv@gmail.org"},
+				"phone":      {"8989898998"},
+			},
+			want: http.StatusSeeOther,
+		},
+		{
+			name: "Valid case for cal",
+			url:  "/admin/reservations/cal/1",
+			postData: url.Values{
+				"first_name": {"rajiv"},
+				"last_name":  {"singh"},
+				"email":      {"rajiv@gmail.org"},
+				"phone":      {"8989898998"},
+				"year":       {"2050"},
+				"month":      {"01"},
+			},
+			want: http.StatusSeeOther,
+		},
+		{
+			name: "Invalid id type",
+			url:  "/admin/reservations/cal/as",
+			postData: url.Values{
+				"first_name": {"rajiv"},
+				"last_name":  {"singh"},
+				"email":      {"rajiv@gmail.org"},
+				"phone":      {"8989898998"},
+				"year":       {"2050"},
+				"month":      {"01"},
+			},
+			want: http.StatusInternalServerError,
+		},
+		{
+			name: "Invalid room",
+			url:  "/admin/reservations/cal/3",
+			postData: url.Values{
+				"first_name": {"rajiv"},
+				"last_name":  {"singh"},
+				"email":      {"rajiv@gmail.org"},
+				"phone":      {"8989898998"},
+				"year":       {"2050"},
+				"month":      {"01"},
+			},
+			want: http.StatusInternalServerError,
+		},
+		{
+			name:     "Empty postData",
+			url:      "/admin/reservations/cal/1",
+			postData: nil,
+			want:     http.StatusInternalServerError,
+		},
+		{
+			name: "Invalid reservation",
+			url:  "/admin/reservations/cal/1",
+			postData: url.Values{
+				"first_name": {"singh"},
+				"last_name":  {"singh"},
+				"email":      {"rajiv@gmail.org"},
+				"phone":      {"8989898998"},
+				"year":       {"2050"},
+				"month":      {"01"},
+			},
+			want: http.StatusInternalServerError,
+		},
+	}
+
+	for _, testCase := range testCases {
+		var req *http.Request
+		if testCase.postData == nil {
+			req, _ = http.NewRequest("POST", testCase.url, nil)
+		} else {
+			req, _ = http.NewRequest("POST", testCase.url, strings.NewReader(testCase.postData.Encode()))
+		}
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		ctx := getCtx(req)
+		req = req.WithContext(ctx)
+		rr := httptest.NewRecorder()
+		handler := http.HandlerFunc(Repo.AdminPostShowReservation)
+		handler.ServeHTTP(rr, req)
+
+		if rr.Code != testCase.want {
+			t.Errorf("AdminPostShowReservation handler returned wrong status code for (%s): got %d, want %d", testCase.name, rr.Code, testCase.want)
+		}
+	}
+}

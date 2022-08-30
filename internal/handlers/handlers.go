@@ -708,13 +708,13 @@ func (m *Repository) AdminShowReservation(w http.ResponseWriter, r *http.Request
 func (m *Repository) AdminPostShowReservation(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		m.App.ErrorLog.Println(err)
+		helpers.ServerError(w, err)
 		return
 	}
-	exploded := strings.Split(r.RequestURI, "/")
+	exploded := strings.Split(r.URL.Path, "/")
 	id, err := strconv.Atoi(exploded[4])
 	if err != nil {
-		m.App.ErrorLog.Println(err)
+		helpers.ServerError(w, err)
 		return
 	}
 	src := exploded[3]
@@ -723,7 +723,7 @@ func (m *Repository) AdminPostShowReservation(w http.ResponseWriter, r *http.Req
 
 	res, err := m.DB.GetReservationById(id)
 	if err != nil {
-		m.App.ErrorLog.Println(err)
+		helpers.ServerError(w, err)
 		return
 	}
 
@@ -734,7 +734,7 @@ func (m *Repository) AdminPostShowReservation(w http.ResponseWriter, r *http.Req
 
 	err = m.DB.UpdateReservation(res)
 	if err != nil {
-		m.App.ErrorLog.Println(err)
+		helpers.ServerError(w, err)
 		return
 	}
 
