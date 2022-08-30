@@ -37,6 +37,8 @@ func TestGetHandlers(t *testing.T) {
 		{"All reservations", "/admin/reservations-all", "GET", http.StatusOK},
 		{"New reservations", "/admin/reservations-new", "GET", http.StatusOK},
 		{"Show reservations", "/admin/reservations/new/1/show", "GET", http.StatusOK},
+		{"Invalid Reservation id for Show reservations", "/admin/reservations/new/3/show", "GET", http.StatusInternalServerError},
+		{"Invalid Reservation id type for Show reservations", "/admin/reservations/new/as/show", "GET", http.StatusInternalServerError},
 		{"Reservation Calendar", "/admin/reservations-calendar?y=2050&m=05", "GET", http.StatusOK},
 	}
 
