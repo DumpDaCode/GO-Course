@@ -112,6 +112,9 @@ func (m *testDBRepo) DeleteReservation(id int) error {
 }
 
 func (m *testDBRepo) UpdateProcessedForReservation(id, processed int) error {
+	if id > 2 {
+		return errors.New("reservation does not exist")
+	}
 	return nil
 }
 

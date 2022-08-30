@@ -693,3 +693,46 @@ func TestRepository_AdminPostShowReservation(t *testing.T) {
 		}
 	}
 }
+
+func TestRepository_AdminProcessReservation(t *testing.T) {
+	var testCases = []struct {
+		name string
+		url  string
+		want int
+	}{
+		{
+			name: "Valid Case for cal route",
+			url:  "/admin/process-reservation/cal/1/do?y=2050&m=01",
+			want: http.StatusSeeOther,
+		},
+		{
+			name: "Valid Case for route other than cal",
+			url:  "/admin/process-reservation/all/1/do",
+			want: http.StatusSeeOther,
+		},
+		{
+			name: "Invalid reservation id",
+			url:  "/admin/process-reservation/all/3/do",
+			want: http.StatusInternalServerError,
+		},
+		{
+			name: "Invalid id type",
+			url:  "/admin/process-reservation/all/as/do",
+			want: http.StatusInternalServerError,
+		},
+	}
+
+	for _, testCase := range testCases {
+		var req *http.Request
+		req, _ = http.NewRequest("POST", testCase.url, nil)
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		ctx := getCtx(req)
+		req = req.WithContext(ctx)
+		rr := httptest.NewRecorder()
+		handler := http.HandlerFunc(Repo.AdminProcessReservation)
+		handler.ServeHTTP(rr, req)
+		if rr.Code != testCase.want {
+			t.Errorf("AdminProcessReservation handler returned wrong status code for (%s): got %d, want %d", testCase.name, rr.Code, testCase.want)
+		}
+	}
+}

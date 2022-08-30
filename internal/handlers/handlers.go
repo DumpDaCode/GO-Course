@@ -753,17 +753,17 @@ func (m *Repository) AdminPostShowReservation(w http.ResponseWriter, r *http.Req
 
 // AdminProcessReservation displays process reservation
 func (m *Repository) AdminProcessReservation(w http.ResponseWriter, r *http.Request) {
-	exploded := strings.Split(r.RequestURI, "/")
+	exploded := strings.Split(r.URL.Path, "/")
 	id, err := strconv.Atoi(exploded[4])
 	if err != nil {
-		m.App.ErrorLog.Println(err)
+		helpers.ServerError(w, err)
 		return
 	}
 	src := exploded[3]
 
 	err = m.DB.UpdateProcessedForReservation(id, 1)
 	if err != nil {
-		m.App.ErrorLog.Println(err)
+		helpers.ServerError(w, err)
 		return
 	}
 
