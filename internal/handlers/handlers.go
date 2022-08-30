@@ -780,17 +780,17 @@ func (m *Repository) AdminProcessReservation(w http.ResponseWriter, r *http.Requ
 
 // AdminDeleteReservation displays process reservation
 func (m *Repository) AdminDeleteReservation(w http.ResponseWriter, r *http.Request) {
-	exploded := strings.Split(r.RequestURI, "/")
+	exploded := strings.Split(r.URL.Path, "/")
 	id, err := strconv.Atoi(exploded[4])
 	if err != nil {
-		m.App.ErrorLog.Println(err)
+		helpers.ServerError(w, err)
 		return
 	}
 	src := exploded[3]
 
 	err = m.DB.DeleteReservation(id)
 	if err != nil {
-		m.App.ErrorLog.Println(err)
+		helpers.ServerError(w, err)
 		return
 	}
 

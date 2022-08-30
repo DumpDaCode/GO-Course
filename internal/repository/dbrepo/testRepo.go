@@ -98,16 +98,24 @@ func (m *testDBRepo) AllNewReservations() ([]models.Reservation, error) {
 }
 
 func (m *testDBRepo) GetReservationById(id int) (models.Reservation, error) {
-
 	var reservation models.Reservation
+	if id > 2 {
+		return reservation, errors.New("room does not exist")
+	}
 	return reservation, nil
 }
 
 func (m *testDBRepo) UpdateReservation(u models.Reservation) error {
+	if u.FirstName == "singh" {
+		return errors.New("reservation does not exist")
+	}
 	return nil
 }
 
 func (m *testDBRepo) DeleteReservation(id int) error {
+	if id > 2 {
+		return errors.New("reservation does not exist")
+	}
 	return nil
 }
 

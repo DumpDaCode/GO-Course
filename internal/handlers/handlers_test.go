@@ -736,3 +736,46 @@ func TestRepository_AdminProcessReservation(t *testing.T) {
 		}
 	}
 }
+
+func TestRepository_AdminDeleteReservation(t *testing.T) {
+	var testCases = []struct {
+		name string
+		url  string
+		want int
+	}{
+		{
+			name: "Valid Case for cal route",
+			url:  "/admin/delete-reservation/cal/1/do?y=2050&m=01",
+			want: http.StatusSeeOther,
+		},
+		{
+			name: "Valid Case for route other than cal",
+			url:  "/admin/delete-reservation/all/1/do",
+			want: http.StatusSeeOther,
+		},
+		{
+			name: "Invalid reservation id",
+			url:  "/admin/delete-reservation/all/3/do",
+			want: http.StatusInternalServerError,
+		},
+		{
+			name: "Invalid id type",
+			url:  "/admin/delete-reservation/all/as/do",
+			want: http.StatusInternalServerError,
+		},
+	}
+
+	for _, testCase := range testCases {
+		var req *http.Request
+		req, _ = http.NewRequest("POST", testCase.url, nil)
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		ctx := getCtx(req)
+		req = req.WithContext(ctx)
+		rr := httptest.NewRecorder()
+		handler := http.HandlerFunc(Repo.AdminDeleteReservation)
+		handler.ServeHTTP(rr, req)
+		if rr.Code != testCase.want {
+			t.Errorf("AdminDeleteReservation handler returned wrong status code for (%s): got %d, want %d", testCase.name, rr.Code, testCase.want)
+		}
+	}
+}
