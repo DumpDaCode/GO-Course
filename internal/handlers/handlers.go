@@ -647,7 +647,7 @@ func (m *Repository) AdminPostReservationsCalendar(w http.ResponseWriter, r *htt
 					if !form.Has(fmt.Sprintf("remove_block_%d_%s", x.ID, name)) {
 						err := m.DB.DeleteBlockByID(value)
 						if err != nil {
-							m.App.ErrorLog.Println(err)
+							helpers.ServerError(w, err)
 						}
 					}
 				}

@@ -161,9 +161,15 @@ func (m *testDBRepo) GetRestrictionsForRoomByDate(roomID int, start, end time.Ti
 }
 
 func (m *testDBRepo) InsertBlockForRoom(id int, startDate time.Time) error {
+	if id > 2 {
+		return errors.New("block does not exist")
+	}
 	return nil
 }
 
 func (m *testDBRepo) DeleteBlockByID(id int) error {
+	if id > 2 {
+		return errors.New("block does not exist")
+	}
 	return nil
 }

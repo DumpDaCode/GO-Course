@@ -513,26 +513,64 @@ func TestRepository_AdminPostReservationsCalendar(t *testing.T) {
 		{
 			name: "valid case",
 			postData: url.Values{
-				"y": []string{
-					"2050",
-				},
-				"m": []string{
-					"01",
-				},
+				"y":                         {"2050"},
+				"m":                         {"01"},
+				"add_block_1_2050-01-01":    {"1"},
+				"remove_block_1_2050-01-04": {"1"},
+				"remove_block_1_2050-01-06": {"2"},
 			},
 			sessionData: map[string]int{},
 			want:        http.StatusSeeOther,
 		},
+		{
+			name: "Adding a block ",
+			postData: url.Values{
+				"y":                         {"2050"},
+				"m":                         {"01"},
+				"add_block_1_2050-01-01":    {"1"},
+				"remove_block_1_2050-01-04": {"1"},
+				"remove_block_1_2050-01-06": {"2"},
+			},
+			sessionData: map[string]int{
+				"2050-01-01": 1,
+			},
+			want: http.StatusSeeOther,
+		},
+		{
+			name: "Updating a block ",
+			postData: url.Values{
+				"y":                         {"2050"},
+				"m":                         {"01"},
+				"add_block_1_2050-01-01":    {"1"},
+				"remove_block_1_2050-01-04": {"1"},
+				"remove_block_1_2050-01-06": {"2"},
+			},
+			sessionData: map[string]int{
+				"2050-01-04": 1,
+			},
+			want: http.StatusSeeOther,
+		},
+		{
+			name: "Not existing room",
+			postData: url.Values{
+				"y":                         {"2050"},
+				"m":                         {"01"},
+				"add_block_3_2050-01-01":    {"1"},
+				"remove_block_3_2050-01-04": {"1"},
+				"remove_block_3_2050-01-06": {"2"},
+			},
+			sessionData: map[string]int{
+				"2050-01-01": 3,
+			},
+			want: http.StatusInternalServerError,
+		},
 	}
 
 	for _, testCase := range testCases {
-		postedData := url.Values{}
-		postedData.Add("y", "2050")
-		postedData.Add("m", "02")
 		req, _ := http.NewRequest("POST", "/admin/reservations-calendar", strings.NewReader(testCase.postData.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		ctx := getCtx(req)
 		req = req.WithContext(ctx)
-
 		rr := httptest.NewRecorder()
 		handler := http.HandlerFunc(Repo.AdminPostReservationsCalendar)
 		session.Put(req.Context(), "block_map_1", testCase.sessionData)
