@@ -28,7 +28,7 @@ type Repository struct {
 	DB  repository.DatabaseRepo
 }
 
-// New creates a new repository
+// NewRepo creates a new repository
 func NewRepo(a *config.AppConfig, db *driver.DB) *Repository {
 	return &Repository{
 		App: a,
@@ -36,7 +36,7 @@ func NewRepo(a *config.AppConfig, db *driver.DB) *Repository {
 	}
 }
 
-// New creates a new repository
+// NewTestRepo creates a new test repository
 func NewTestRepo(a *config.AppConfig) *Repository {
 	return &Repository{
 		App: a,
